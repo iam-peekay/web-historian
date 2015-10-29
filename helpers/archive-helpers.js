@@ -78,9 +78,8 @@ exports.downloadUrls = function(pendingList) {
   // console.log('list: ' + exports.paths.list);
   console.log(pendingList.length)
   pendingList.forEach(function(url) {
-    // console.log(url);    
+    console.log('downloading ' + url);
     httpReq.get(url, function(err, data) {
-      console.log(data);
       if(data) {
         var siteText = data.buffer.toString();
         fs.writeFile(exports.paths.archivedSites + '/' + url, siteText, function(err) {
@@ -89,6 +88,6 @@ exports.downloadUrls = function(pendingList) {
           }
         });
       }
-      });
     });
-  }
+  });
+}
