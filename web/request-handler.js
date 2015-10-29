@@ -74,7 +74,7 @@ exports.handleRequest = function (req, res) {
             });
 
             // Display loading page.
-            archive.downloadUrls([urlString]); 
+            // archive.downloadUrls([urlString]); 
             res.writeHead(300, httpHelp.headers)
             httpHelp.serveAssets(res, archive.paths.siteAssets + '/loading.html', function(err, success) {
               if (err) {

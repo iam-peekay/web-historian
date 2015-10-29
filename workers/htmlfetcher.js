@@ -1,9 +1,11 @@
+#!/usr/local/bin/env node
+
 var archive = require('../helpers/archive-helpers');
 var _ = require('underscore');
 var fs = require('fs');
 
-// Get currently archived sites into an array
-module.exports.gogo = function() { 
+// // Get currently archived sites into an array
+// module.exports.gogo = function() { 
 
 fs.readdir(archive.paths.archivedSites, function(err, files) {
   var diffList = [];
@@ -25,4 +27,6 @@ fs.readdir(archive.paths.archivedSites, function(err, files) {
   archive.downloadUrls(diffList);
 });
 
-}
+// }
+// 
+// */1 * * * * NODE_PATH=/Users/student/.local/bin:/Users/student/.bin:/Users/student/bin:/Users/student/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin PATH=/Users/student/.bin:/Users/student/bin:/Users/student/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin /Users/student/Codes/2015-10-web-historian/workers/htmlfetcher.js
