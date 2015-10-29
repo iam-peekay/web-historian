@@ -33,8 +33,7 @@ exports.readListOfUrls = function(callback) {
     }
 
     var output = data.split('\n');
-    output.pop();
-    console.log(output)
+    output.shift();
     callback(output);
   });
 };
@@ -52,9 +51,13 @@ exports.isUrlInList = function(urlString, callback) {
 };
 
 exports.addUrlToList = function(urlString, callback) {
-  fs.appendFile(exports.paths.list, urlString + '\n', 'utf8', function(err) {
-    callback(err);
-  });
+  exports.isUrlInList(urlString, function(isMember) {
+    if(!isMember) {
+      fs.appendFile(exports.paths.list, '\n' + urlString, 'utf8', function(err) {
+        callback(err);
+      });
+    }
+  })
 };
 
 exports.isUrlArchived = function(urlString, callback) {
@@ -73,21 +76,19 @@ exports.downloadUrls = function(pendingList) {
   // save it to archives/sites
   // console.log('archiveSites: ' + exports.paths.archivedSites);
   // console.log('list: ' + exports.paths.list);
+  console.log(pendingList.length)
   pendingList.forEach(function(url) {
-    
-    // exports.addUrlToList(url, function(err) {
-    //   if (err) {
-    //     throw err;
-    //   }
-    // });
-    
+    // console.log(url);    
     httpReq.get(url, function(err, data) {
-      var siteText = data.buffer.toString();
+      console.log(data);
+      if(data) {
+        var siteText = data.buffer.toString();
         fs.writeFile(exports.paths.archivedSites + '/' + url, siteText, function(err) {
           if (err) {
             throw err;
           }
         });
+      }
       });
     });
   }

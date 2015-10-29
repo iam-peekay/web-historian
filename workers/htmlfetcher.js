@@ -1,12 +1,28 @@
-// Use the code in `archive-helpers.js` to actually download the urls
-// that are waiting.
-
-// Array of urls to get
-// Call archive-helpers to get those things
+var archive = require('../helpers/archive-helpers');
+var _ = require('underscore');
+var fs = require('fs');
 
 // Get currently archived sites into an array
-fs.readdirSync(archive.paths.archivedSites)
+module.exports.gogo = function() { 
 
-// Get sites in the list
-// Diff the two
-// Download the sites in the diff
+fs.readdir(archive.paths.archivedSites, function(err, files) {
+  var diffList = [];
+  
+  // Get sites in the list
+  archive.readListOfUrls(function(urlList) {
+    // console.log('urlList: ' + urlList);
+    // console.log('files: ' + files);
+    // console.log(_.difference(urlList, files));
+    
+    // Diff the two
+    diffList = _.difference(urlList, files);
+    diffList.pop();
+
+    console.log(diffList);
+
+  })
+  // Download the sites in the diff
+  archive.downloadUrls(diffList);
+});
+
+}
