@@ -1,9 +1,9 @@
-var expect = require('chai').expect;
+var expect = require('../node_modules/chai').expect;
 var server = require("../web/basic-server.js");
 var fs = require('fs');
 var archive = require("../helpers/archive-helpers");
 var path = require('path');
-var supertest = require('supertest');
+var supertest = require('../node_modules/supertest');
 var initialize = require("../web/initialize.js");
 
 initialize(path.join(__dirname, '/testdata'));

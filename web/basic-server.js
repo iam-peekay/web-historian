@@ -14,6 +14,6 @@ if (module.parent) {
   module.exports = server;
 } else {
   server.listen(port, ip);
-  console.log("Listening on http://" + ip + ":" + port);
+  var time = new Date();
+  console.log("Listening on http://" + ip + ":" + port + ' at ' + time.getMinutes() + ':' + time.getSeconds());
 }
-
