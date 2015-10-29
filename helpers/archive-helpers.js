@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+var httpReq = require('http-request');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -31,14 +32,16 @@ exports.readListOfUrls = function(callback) {
       throw err;
     }
 
-    callback(data.split('\n'));
+    var output = data.split('\n');
+    output.pop();
+    console.log(output)
+    callback(output);
   });
 };
 
 exports.isUrlInList = function(urlString, callback) { 
   // check if urlString in readListOfUrls, save to var
   // perform callback on bool
-
   exports.readListOfUrls(function(urlsArray) {
     if(urlsArray.indexOf(urlString) >= 0) {
       callback(true);
@@ -54,8 +57,37 @@ exports.addUrlToList = function(urlString, callback) {
   });
 };
 
-exports.isUrlArchived = function() {
+exports.isUrlArchived = function(urlString, callback) {
+  fs.readdir(exports.paths.archivedSites, function(err, files) {
+    if(files.indexOf(urlString) >= 0) {
+      callback(true);
+    } else {
+      callback(false);
+    }
+  })
 };
 
-exports.downloadUrls = function() {
-};
+exports.downloadUrls = function(pendingList) {
+  // Go through each of them
+  // httpReq each file
+  // save it to archives/sites
+  // console.log('archiveSites: ' + exports.paths.archivedSites);
+  // console.log('list: ' + exports.paths.list);
+  pendingList.forEach(function(url) {
+    
+    // exports.addUrlToList(url, function(err) {
+    //   if (err) {
+    //     throw err;
+    //   }
+    // });
+    
+    httpReq.get(url, function(err, data) {
+      var siteText = data.buffer.toString();
+        fs.writeFile(exports.paths.archivedSites + '/' + url, siteText, function(err) {
+          if (err) {
+            throw err;
+          }
+        });
+      });
+    });
+  }

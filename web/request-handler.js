@@ -3,6 +3,7 @@ var archive = require('../helpers/archive-helpers');
 var httpHelp = require(__dirname + '/http-helpers');
 var url = require('url');
 var qs = require('querystring');
+var fs = require('fs');
 
 // require more modules/folders here!
 
@@ -45,21 +46,30 @@ exports.handleRequest = function (req, res) {
       var urlString = body.split('=')[1];
       // Get url list, then check...
       archive.isUrlInList(urlString, function(found) {
+        console.log(found);
+        // If the page is found in the list
         if(found) {
           // Serve that page
+          fs.readFile(archive.paths.archivedSites + '/' + urlString, function(err, content) {
+            if (err) {
+              console.log('ERROROMG' + urlString);
+              throw err;
+            }
+            res.writeHead(201, httpHelp.headers);
+            res.end(content);
+          });
         } else {
-          // if urlString doesn't exist, 
-          // TODO: Send the loading page first
-
-          // Then add the url to the list
           archive.addUrlToList(urlString, function(err) {
             if (err) {
               throw err
             };
-
-            res.writeHead(302, httpHelp.headers);
-            res.end();
-          });          
+            archive.downloadUrls([urlString]); 
+            // if urlString doesn't exist, 
+            // TODO: Send the loading page first
+            res.writeHead(300, httpHelp.headers)
+            res.end(archive.paths.siteAssets + '/loading.html')
+            // Then add the url to the list      
+          });
         }
       })
     });

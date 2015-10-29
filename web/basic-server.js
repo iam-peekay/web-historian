@@ -15,5 +15,5 @@ if (module.parent) {
 } else {
   server.listen(port, ip);
   var time = new Date();
-  console.log("Listening on http://" + ip + ":" + port + ' at ' + time.getMinutes() + ':' + time.getSeconds());
+  console.log("Listening on http://" + ip + ":" + port + ' at ' + time.getHours() + ':' +time.getMinutes() + ':' + time.getSeconds());
 }
