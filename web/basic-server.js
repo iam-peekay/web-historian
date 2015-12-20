@@ -2,8 +2,7 @@ var http = require("http");
 var handler = require("./request-handler");
 var initialize = require("./initialize.js");
 
-// Why do you think we have this here?
-// HINT: It has to do with what's in .gitignore
+// Creates a new archives folder if it doesn't exist already
 initialize("./archives");
 
 var port = 8080;

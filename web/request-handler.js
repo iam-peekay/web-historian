@@ -1,101 +1,66 @@
 var path = require('path');
 var archive = require('../helpers/archive-helpers');
-var httpHelp = require(__dirname + '/http-helpers');
-var url = require('url');
-var qs = require('querystring');
-var fs = require('fs');
-var fetcher = require('../workers/htmlfetcher');
-
 // require more modules/folders here!
 
-exports.handleRequest = function (req, res) {
-  console.log(req.method);
-  if (req.method === 'OPTIONS') {
-    res.writeHead(200, httpHelp.headers);
-    res.end();
-  } else if (req.method === 'GET'){
+var url = require('url');
+var helpers = require('./http-helpers');
 
-    var filePath = url.parse(req.url).pathname;
-    var asset;
+// To clean up the code, we modularize the GET and POST requests into an object
+var actions = {
+  'GET': function(request, response) {
+    var urlPath = url.parse(request.url).pathname;
 
-    if(filePath ==='/') {
-      asset = archive.paths.siteAssets + '/index.html';
-    } else {
-      asset = archive.paths.archivedSites + filePath;
-    }
+    // / means index.html
+    if (urlPath === '/') { urlPath = '/index.html'; }
 
-    httpHelp.serveAssets(res, asset, function(err, success) {
-      if (err) {
-        res.writeHead(404, {'Content-Type': 'text/plain'});
-        res.end(err.message);
-      } 
-      else {
-        var assetExtension = path.extname(filePath);
+    helpers.serveAssets(response, urlPath, function() {
+      // trim leading slash if present
+      if (urlPath[0] === '/') { urlPath = urlPath.slice(1) }
 
-        if (assetExtension === '.css') {
-          httpHelp.headers['Content-Type'] = 'text/html'
+      archive.isUrlInList(urlPath, function(found) {
+        if (found) {
+          helpers.sendRedirect(response, '/loading.html');
+        } else {
+          helpers.send404(response);
         }
-        res.writeHead(200, httpHelp.headers);
-        res.end(success);
-      }
+      });
     });
-  } 
-  else if (req.method === 'POST') {
-    var body = '';
-    req.on('data', function(chunk) {
-      body += chunk;
+  },
+  'POST': function(request, response) {
+    helpers.collectData(request, function(data) {
+      var url = data.split('=')[1].replace('http://', '');
+      // check sites.txt for web site
+      archive.isUrlInList(url, function(found) {
+        if (found) { // found site
+          // check if site is on disk
+          archive.isUrlArchived(url, function(exists) {
+            if (exists) {
+              // redirect to site page (/www.google.com)
+              helpers.sendRedirect(response, '/' + url);
+            } else {
+              // Redirect to loading.html
+              helpers.sendRedirect(response, '/loading.html');
+            }
+          });
+        } else { // not found
+          // add to sites.txt
+          archive.addUrlToList(url, function() {
+            // Redirect to loading.html
+            helpers.sendRedirect(response, '/loading.html');
+          });
+        }
+      });
     });
-    req.on('end', function() {
-      var urlString = qs.parse(body).url;
-      if(urlString === undefined) {
-        res.writeHead(404, httpHelp.headers)
-        res.end();
-      } else {
-        // Get url archive, then check...
-        archive.isUrlArchived(urlString, function(found) {
-          // If the page is archived
-          if(found) {
-            console.log('i ran 1 ' + urlString)
-            // Serve that page
-            fs.readFile(archive.paths.archivedSites + '/' + urlString, function(err, content) {
-              if (err) {
-                throw err;
-              }
-              res.writeHead(201, httpHelp.headers);
-              res.end(content);
-            });
-          } else { // Or if the page is not found in the archive
-            // Add the url to the list.
-             console.log('i ran 2 ' + urlString)
-            archive.addUrlToList(urlString, function(err) {
-              if (err) {
-                throw err
-              };
-            });
+  }
+};
 
-            // Display loading page.
-            // archive.downloadUrls([urlString]); 
-            res.writeHead(300, httpHelp.headers)
-            httpHelp.serveAssets(res, archive.paths.siteAssets + '/loading.html', function(err, success) {
-              if (err) {
-                res.writeHead(404, {'Content-Type': 'text/plain'});
-                res.end(err.message);
-              } 
-              else {
-                var assetExtension = path.extname(filePath);
-
-                if (assetExtension === '.css') {
-                  httpHelp.headers['Content-Type'] = 'text/html'
-                }
-
-                res.writeHead(200, httpHelp.headers);
-                res.end(success);
-              }
-            });
-          }
-        })
-      }
-    });
-    // setInterval(fetcher.gogo, 1000);
+// This determines what the request method is
+// Then uses the above actions object to perform the appropriate action
+exports.handleRequest = function (req, res) {
+  var handler = actions[req.method];
+  if (handler) {
+    handler(req, res);
+  } else {
+    helpers.send404(response);
   }
 };
